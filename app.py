@@ -9,18 +9,40 @@ st.set_page_config(
 st.title("نظام توثيق الفطريات في الجبل الأخضر - ليبيا 🍄")
 st.markdown("---")
 
-# ثوابت الاتصال بـ GitHub لجلب الصور بدقة تامة
+# ثوابت الاتصال بـ GitHub لجلب الصور بدقة
 GITHUB_USER = "asmaalmabruk5-cmyk"
 REPO_NAME = "macro-fungi-diversity-libya"
 RAW_IMAGE_BASE_URL = (
     f"https://raw.githubusercontent.com/{GITHUB_USER}/{REPO_NAME}/main/images/"
 )
 
+EXCEL_FILE = "macrofungi_database_template.xlsx"
 
-# تحميل بيانات الإكسل مع تحديث فوري (بدون كاش قديم)
+
 @st.cache_data(ttl=1)
 def load_data():
-  return pd.read_excel("macrofungi_database_template.xlsx")
+  if os.path.exists(EXCEL_FILE):
+    return pd.read_excel(EXCEL_FILE)
+  else:
+    # جدول افتراضي مؤقت في حال لم يُرفع الملف لتعمل المنظومة فوراً
+    data = {
+        "Specimen_ID": ["SPEC-2026-AG-NA01"],
+        "Scientific_Name": ["Agaricus sp. (Agaricus campestris)"],
+        "Arabic_Name": ["فطر المبلع (نعمة)"],
+        "Location": ["البيضاء - منطقة المبلع (الجبل الأخضر)"],
+        "Collection_Date": ["2026-10-13"],
+        "Edibility": ["Edible"],
+        "Field_Traits": [
+            "الغطاء شبه كروي إلى محدب أبيض لكرّيمي، الساق أسطوانية بيضاء"
+        ],
+        "Microscopic_Traits": [
+            "أبواغ بازيدية إهليلجية إلى بيضاوية، ملساء الجدار"
+        ],
+        "Field_Image": ["agaricus_naama_field.jpg"],
+        "Cap_Image": ["agaricus_naama_cap.jpg"],
+        "Spore_Image": ["agaricus_naama_spores.jpg"],
+    }
+    return pd.DataFrame(data)
 
 
 try:
@@ -54,11 +76,10 @@ try:
   st.subheader("📷 الصور التوثيقية")
 
 
-  # دالة ذكية لعرض الصور مع بدائل تلقائية
   def display_image(img_name, label):
     st.markdown(f"### {label}")
     if pd.isna(img_name) or str(img_name).strip() == "":
-      st.info(f"{label} غير متوفرة (اختياري)")
+      st.info(f"{label} غير متوفرة")
       return
 
     clean_name = str(img_name).strip()
