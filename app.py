@@ -9,7 +9,7 @@ st.set_page_config(
 st.title("نظام توثيق الفطريات في الجبل الأخضر - ليبيا 🍄")
 st.markdown("---")
 
-# رابط المستودع المباشر لجلب الصور بدون مشاكل المسارات المحلية
+# ثوابت الاتصال بـ GitHub لجلب الصور بدقة تامة
 GITHUB_USER = "asmaalmabruk5-cmyk"
 REPO_NAME = "macro-fungi-diversity-libya"
 RAW_IMAGE_BASE_URL = (
@@ -17,7 +17,7 @@ RAW_IMAGE_BASE_URL = (
 )
 
 
-# إلغاء الكاش مؤقتاً لضمان قراءة أحدث بيانات الإكسل
+# تحميل بيانات الإكسل مع تحديث فوري (بدون كاش قديم)
 @st.cache_data(ttl=1)
 def load_data():
   return pd.read_excel("macrofungi_database_template.xlsx")
@@ -54,25 +54,20 @@ try:
   st.subheader("📷 الصور التوثيقية")
 
 
-  # دالة ذكية تجرب التحميل عبر الإنترنت مباشرة ثم محلياً
+  # دالة ذكية لعرض الصور مع بدائل تلقائية
   def display_image(img_name, label):
     st.markdown(f"### {label}")
     if pd.isna(img_name) or str(img_name).strip() == "":
-      st.info(f"{label} غير متوفرة")
+      st.info(f"{label} غير متوفرة (اختياري)")
       return
 
     clean_name = str(img_name).strip()
-
-    # 1. التجربة الأولى: الرابط المباشر من GitHub (الأضمن والأسرع)
     remote_url = f"{RAW_IMAGE_BASE_URL}{clean_name}"
-
-    # 2. التجربة الثانية: المسار المحلي
     local_path = os.path.join("images", clean_name)
 
     if os.path.exists(local_path):
       st.image(local_path, use_container_width=True)
     else:
-      # عرض الصورة عبر الرابط المباشر
       st.image(remote_url, use_container_width=True)
 
 
