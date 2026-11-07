@@ -1,5 +1,4 @@
 import os
-from PIL import Image
 import pandas as pd
 import streamlit as st
 
@@ -10,22 +9,16 @@ st.set_page_config(
 st.title("نظام توثيق الفطريات في الجبل الأخضر - ليبيا 🍄")
 st.markdown("---")
 
-# --- ميزة تشخيصية فورية لمكان الملفات والصور ---
-with st.expander("🔍 لوحة التشخيص لمعرفة مكان الملفات والصور", expanded=True):
-  st.write("**محتويات المجلد الحالي على السيرفر:**", os.listdir("."))
-  if os.path.exists("images"):
-    st.write(
-        "**محتويات مجلد `images`:**",
-        os.listdir("images")
-        if os.path.isdir("images")
-        else "مجلد images غير صالح",
-    )
-  else:
-    st.warning("⚠️ تنبيه: مجلد `images` غير موجود في المسار الحالي!")
-st.markdown("---")
+# رابط المستودع المباشر لجلب الصور بدون مشاكل المسارات المحلية
+GITHUB_USER = "asmaalmabruk5-cmyk"
+REPO_NAME = "macro-fungi-diversity-libya"
+RAW_IMAGE_BASE_URL = (
+    f"https://raw.githubusercontent.com/{GITHUB_USER}/{REPO_NAME}/main/images/"
+)
 
 
-@st.cache_data
+# إلغاء الكاش مؤقتاً لضمان قراءة أحدث بيانات الإكسل
+@st.cache_data(ttl=1)
 def load_data():
   return pd.read_excel("macrofungi_database_template.xlsx")
 
@@ -61,6 +54,7 @@ try:
   st.subheader("📷 الصور التوثيقية")
 
 
+  # دالة ذكية تجرب التحميل عبر الإنترنت مباشرة ثم محلياً
   def display_image(img_name, label):
     st.markdown(f"### {label}")
     if pd.isna(img_name) or str(img_name).strip() == "":
@@ -68,31 +62,18 @@ try:
       return
 
     clean_name = str(img_name).strip()
-    base_name = os.path.splitext(clean_name)[0]
 
-    # قائمة مسارات شاملة تبحث في كل الاحتمالات الممكنة
-    possible_paths = [
-        os.path.join("images", clean_name),
-        os.path.join("images", f"{clean_name}.jpg"),
-        os.path.join("images", f"{base_name}.jpg"),
-        clean_name,
-        f"{clean_name}.jpg",
-        f"{base_name}.jpg",
-    ]
+    # 1. التجربة الأولى: الرابط المباشر من GitHub (الأضمن والأسرع)
+    remote_url = f"{RAW_IMAGE_BASE_URL}{clean_name}"
 
-    loaded_img = None
-    for path in possible_paths:
-      if os.path.exists(path):
-        try:
-          loaded_img = Image.open(path)
-          break
-        except Exception:
-          continue
+    # 2. التجربة الثانية: المسار المحلي
+    local_path = os.path.join("images", clean_name)
 
-    if loaded_img:
-      st.image(loaded_img, use_container_width=True)
+    if os.path.exists(local_path):
+      st.image(local_path, use_container_width=True)
     else:
-      st.warning(f"عذراً، لم يتم العثور على الملف: {clean_name}")
+      # عرض الصورة عبر الرابط المباشر
+      st.image(remote_url, use_container_width=True)
 
 
   c1, c2, c3 = st.columns(3)
