@@ -3,7 +3,6 @@ from PIL import Image
 import pandas as pd
 import streamlit as st
 
-# ضبط عنوان الصفحة والتنسيق
 st.set_page_config(
     page_title="قاعدة بيانات فطريات الجبل الأخضر", page_icon="🍄", layout="wide"
 )
@@ -12,7 +11,6 @@ st.title("نظام توثيق الفطريات في الجبل الأخضر - ل
 st.markdown("---")
 
 
-# 1. تحميل البيانات من ملف الإكسل
 @st.cache_data
 def load_data():
   return pd.read_excel("macrofungi_database_template.xlsx")
@@ -21,32 +19,34 @@ def load_data():
 try:
   df = load_data()
 
-  # 2. قائمة اختيار الفطر
   selected_species = st.selectbox(
       "اختر الفطر للاستعراض:", df["Scientific_Name"].unique()
   )
   specimen = df[df["Scientific_Name"] == selected_species].iloc[0]
 
-  # 3. عرض التفاصيل العلمية والحقلية
-  st.subheader(f"🌱 معلومات العينة والوصف: {specimen['Scientific_Name']}")
+  st.subheader(
+      f"🌱 معلومات العينة والوصف: {specimen.get('Scientific_Name', '')}"
+  )
 
   col_info1, col_info2 = st.columns(2)
   with col_info1:
-    st.write(f"**رقم العينة:** {specimen['Specimen_ID']}")
-    st.write(f"**الاسم بالعربية:** {specimen['Arabic_Name']}")
-    st.write(f"**الحالة الغذائية:** {specimen['Edibility']}")
-    st.write(f"**موقع الجمع:** {specimen['Location']}")
-    st.write(f"**تاريخ الجمع:** {specimen['Collection_Date']}")
+    st.write(f"**رقم العينة:** {specimen.get('Specimen_ID', 'N/A')}")
+    if "Arabic_Name" in specimen and pd.notna(specimen["Arabic_Name"]):
+      st.write(f"**الاسم بالعربية:** {specimen['Arabic_Name']}")
+    st.write(f"**الحالة الغذائية:** {specimen.get('Edibility', 'N/A')}")
+    st.write(f"**موقع الجمع:** {specimen.get('Location', 'N/A')}")
+    st.write(f"**تاريخ الجمع:** {specimen.get('Collection_Date', 'N/A')}")
 
   with col_info2:
-    st.write(f"**الصفات الحقلية:** {specimen['Field_Traits']}")
-    st.write(f"**الصفات المجهرية:** {specimen['Microscopic_Traits']}")
+    st.write(f"**الصفات الحقلية:** {specimen.get('Field_Traits', 'N/A')}")
+    st.write(
+        f"**الصفات المجهرية:** {specimen.get('Microscopic_Traits', 'N/A')}"
+    )
 
   st.markdown("---")
   st.subheader("📷 الصور التوثيقية")
 
 
-  # 4. دالة عرض الصور المرنة مع الامتدادات المتعددة
   def display_image(img_name, label):
     st.markdown(f"### {label}")
     if pd.isna(img_name) or str(img_name).strip() == "":
@@ -56,7 +56,6 @@ try:
     clean_name = str(img_name).strip()
     base_name = os.path.splitext(clean_name)[0]
 
-    # احتمالات المسارات المختلفة للأيقونات والصور
     possible_paths = [
         os.path.join("images", clean_name),
         os.path.join("images", f"{clean_name}.jpg"),
@@ -81,7 +80,6 @@ try:
       st.warning(f"عذراً، لم يتم العثور على الملف: {clean_name}")
 
 
-  # عرض الصور الثلاث في 3 أعمدة
   c1, c2, c3 = st.columns(3)
   with c1:
     display_image(specimen.get("Field_Image"), "صورة الحقل")
