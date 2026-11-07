@@ -10,6 +10,20 @@ st.set_page_config(
 st.title("نظام توثيق الفطريات في الجبل الأخضر - ليبيا 🍄")
 st.markdown("---")
 
+# --- ميزة تشخيصية فورية لمكان الملفات والصور ---
+with st.expander("🔍 لوحة التشخيص لمعرفة مكان الملفات والصور", expanded=True):
+  st.write("**محتويات المجلد الحالي على السيرفر:**", os.listdir("."))
+  if os.path.exists("images"):
+    st.write(
+        "**محتويات مجلد `images`:**",
+        os.listdir("images")
+        if os.path.isdir("images")
+        else "مجلد images غير صالح",
+    )
+  else:
+    st.warning("⚠️ تنبيه: مجلد `images` غير موجود في المسار الحالي!")
+st.markdown("---")
+
 
 @st.cache_data
 def load_data():
@@ -56,12 +70,12 @@ try:
     clean_name = str(img_name).strip()
     base_name = os.path.splitext(clean_name)[0]
 
-    # قائمة المسارات الشاملة (تبحث في مجلد images وفي المجلد الرئيسي مباشرة)
+    # قائمة مسارات شاملة تبحث في كل الاحتمالات الممكنة
     possible_paths = [
         os.path.join("images", clean_name),
         os.path.join("images", f"{clean_name}.jpg"),
         os.path.join("images", f"{base_name}.jpg"),
-        clean_name,  # في المجلد الرئيسي مباشرة
+        clean_name,
         f"{clean_name}.jpg",
         f"{base_name}.jpg",
     ]
