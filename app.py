@@ -1,62 +1,70 @@
+import os
+from PIL import Image
 import pandas as pd
 import streamlit as st
-from PIL import Image
 
-st.set_page_config(
-    page_title="فطريات الجبل الأخضر - ليبيا", page_icon="🍄", layout="wide"
-)
-
-st.title("🍄 توثيق وعرض الفطريات الكبيرة في الجبل الأخضر")
-st.write("استعراض بيانات العينات الحقلية والصور التوثيقية")
+st.title("نظام توثيق الفطريات في الجبل الأخضر - ليبيا 🍄")
 
 
 @st.cache_data
 def load_data():
-  df = pd.read_excel("macrofungi_database_template.xlsx")
-  return df
+  return pd.read_excel("macrofungi_database_template.xlsx")
 
 
-try:
-  df = load_data()
-  specimen_list = df["Scientific_Name"].tolist()
-  selected_specimen = st.selectbox("اختر الفطر للاستعراض:", specimen_list)
+df = load_data()
 
-  specimen_data = df[df["Scientific_Name"] == selected_specimen].iloc[0]
+selected_species = st.selectbox(
+    "اختر الفطر للاستعراض:", df["Scientific_Name"].unique()
+)
+specimen = df[df["Scientific_Name"] == selected_species].iloc[0]
 
-  st.header(f"🌿 {specimen_data['Scientific_Name']}")
+st.subheader(f"معلومات الحقل والوصف: {specimen['Scientific_Name']}")
+st.write(f"**رقم العينة:** {specimen['Specimen_ID']}")
+st.write(f"**الحالة الغذائية:** {specimen['Edibility']}")
+st.write(f"**موقع الجمع:** {specimen['Location']}")
+st.write(f"**تاريخ الجمع:** {specimen['Collection_Date']}")
+st.write(f"**الصفات الحقلية:** {specimen['Field_Traits']}")
+st.write(f"**الصفات المجهرية:** {specimen['Microscopic_Traits']}")
 
-  col1, col2 = st.columns(2)
 
-  with col1:
-    st.subheader("معلومات الحقل والوصف")
-    st.write(f"**رقم العينة:** {specimen_data['Specimen_ID']}")
-    st.write(f"**الحالة الغذائية:** {specimen_data['Edibility']}")
-    st.write(f"**موقع الجمع:** {specimen_data['Location']}")
-    st.write(f"**تاريخ الجمع:** {specimen_data['Collection_Date']}")
-    st.write(f"**الصفات الحقلية:** {specimen_data['Field_Traits']}")
-    st.write(f"**الصفات المجهرية:** {specimen_data['Microscopic_Traits']}")
+# دالة ذكية للبحث عن الصورة وعرضها حتى لو كان الامتداد مختلفاً
+def display_image(img_name, label):
+  st.markdown(f"**{label}**")
+  if pd.isna(img_name) or str(img_name).strip() == "":
+    st.info(f"{label} غير متوفرة")
+    return
 
-  with col2:
-    st.subheader("الصور التوثيقية")
-    try:
-      field_img_path = f"images/{specimen_data['Field_Image']}"
-      st.image(
-          Image.open(field_img_path),
-          caption="صورة الحقل",
-          use_container_width=True,
-      )
-    except Exception:
-      st.info("صورة الحقل غير متوفرة حالياً")
+  img_name = str(img_name).strip()
+  possible_paths = [
+      os.path.join("images", img_name),
+      os.path.join("images", img_name + ".jpeg"),
+      os.path.join("images", img_name + ".jpg"),
+      os.path.join("images", img_name + ".jpg.jpeg"),
+  ]
 
-    try:
-      cap_img_path = f"images/{specimen_data['Cap_Image']}"
-      st.image(
-          Image.open(cap_img_path),
-          caption="صورة القلنسوة/الغطاء",
-          use_container_width=True,
-      )
-    except Exception:
-      pass
+  loaded_img = None
+  for path in possible_paths:
+    if os.path.exists(path):
+      try:
+        loaded_img = Image.open(path)
+        break
+      except Exception:
+        continue
 
-except Exception as e:
-  st.error(f"حدث خطأ في قراءة البيانات أو ملف الإكسل: {e}")
+  if loaded_img:
+    st.image(loaded_img, use_container_width=True)
+  else:
+    st.info(f"عذراً، لم يتم العثور على الملف: {img_name}")
+
+
+st.subheader("الصور التوثيقية")
+col1, col2, col3 = st.columns(3)
+
+with col1:
+  display_image(specimen.get("Field_Image"), "صورة الحقل")
+
+with col2:
+  display_image(specimen.get("Cap_Image"), "صورة القلنسوة")
+
+with col3:
+  display_image(specimen.get("Spore_Image"), "الصورة المجهرية (الجراثيم)")
