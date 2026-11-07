@@ -56,13 +56,14 @@ try:
     clean_name = str(img_name).strip()
     base_name = os.path.splitext(clean_name)[0]
 
+    # قائمة المسارات الشاملة (تبحث في مجلد images وفي المجلد الرئيسي مباشرة)
     possible_paths = [
         os.path.join("images", clean_name),
         os.path.join("images", f"{clean_name}.jpg"),
-        os.path.join("images", f"{clean_name}.jpeg"),
         os.path.join("images", f"{base_name}.jpg"),
-        os.path.join("images", f"{base_name}.jpeg"),
-        os.path.join("images", f"{base_name}.jpg.jpeg"),
+        clean_name,  # في المجلد الرئيسي مباشرة
+        f"{clean_name}.jpg",
+        f"{base_name}.jpg",
     ]
 
     loaded_img = None
